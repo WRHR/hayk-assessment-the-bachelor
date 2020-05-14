@@ -1,48 +1,47 @@
 require 'pry'
 
-def get_first_name_of_season_winner(data, season)
-  data[season].find do |person| 
-    if person["status"] == "Winner"
-      return person["name"].split(' ').shift
-    end
-  end
+def get_winner_of_season seasons, season_label
+    seasons[season_label].find { |person| person["status"] == "Winner" }
+end
+
+def get_first_name_of_season_winner seasons, season_label
+  winner = get_winner_of_season(seasons, season_label)
+  winner["name"].split(' ').shift
 end
 
 
-def all_contestants(data)
-  contestants = []
-  data.map do |season, people|
-    people.map do |contestant|
-      contestants << contestant
+def get_all_contestants seasons 
+  seasons.reduce([]) do |all_contestants, (season_label, contestants)|
+    contestants_with_season = contestants.map do |contestant| 
+      contestant["season"] = season_label
+      contestant
     end
-  end
-  contestants
-end
-
-def get_contestant_name(data, occupation)
-  all_contestants(data).find do |contestant|
-    if contestant["occupation"] == occupation
-      return contestant["name"]
-    end
+    all_contestants.concat contestants_with_season
   end
 end
 
-def count_contestants_by_hometown(data, hometown)
-  all_contestants(data).reduce(0) do |hometown_count, contestant|
+def get_contestant_by_field seasons, key, value
+  get_all_contestants(seasons).find { |contestant| contestant[key] == value }
+end
+
+def get_contestant_name seasons, occupation
+  get_contestant_by_field(seasons, "occupation", occupation)["name"]
+end
+
+def count_contestants_by_hometown seasons, hometown
+  get_all_contestants(seasons).reduce(0) do |hometown_count, contestant|
     contestant["hometown"] == hometown ? hometown_count + 1 : hometown_count
   end
 end
 
-def get_occupation(data, hometown)
-  all_contestants(data).find do |contestant|
-    if contestant["hometown"] == hometown
-      return contestant["occupation"]
-    end
-  end
+def get_occupation seasons, hometown
+  contestant = get_all_contestants(seasons)
+    .find { |contestant| contestant["hometown"] == hometown }
+  contestant["occupation"]
 end
 
-def get_average_age_for_season(data, season)
-  contestant_ages = data[season].map { |contestant| contestant["age"].to_f }
+def get_average_age_for_season seasons, season_label 
+  contestant_ages = seasons[season_label].map { |contestant| contestant["age"].to_f }
   average_age = (contestant_ages.sum / contestant_ages.length).round
   #binding.pry
 end
